@@ -29,7 +29,10 @@ class DB {
       const keys = Object.keys(metal);
       const values = keys.map(k => metal[k]);
       const placeholders = keys.map(() => '?').join(',');
-      const sql = `INSERT INTO \`${table}\` (${keys.map(k => `\`${k}\``).join(',')}) VALUES (${placeholders})`;
+      // Aktualizuj tylko te pola przy duplikacie
+      const updatable = ['ask','bid','price','high','low','change','change_percent','updated'];
+      const updateClause = updatable.map(k => `\`${k}\`=VALUES(\`${k}\`)`).join(', ');
+      const sql = `INSERT INTO \`${table}\` (${keys.map(k => `\`${k}\``).join(',')}) VALUES (${placeholders}) ON DUPLICATE KEY UPDATE ${updateClause}`;
       await this.connection.execute(sql, values);
     }
   }
