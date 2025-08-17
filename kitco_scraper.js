@@ -31,27 +31,40 @@ const puppeteer = require('puppeteer');
       }
       if (seen.has(metalName)) return;
       seen.add(metalName);
-      row['Metals'] = metalName;
+      // Jeśli spans[1] == 'Rhodium', pomiń ją i przesuwaj indeksy
       if (spans[1]?.textContent.trim() === 'Rhodium') {
         base = 2;
       }
-      row['Date'] = spans[base]?.textContent.trim() || '';
-      row['Time'] = spans[base+1]?.textContent.trim() || '';
-      // Usuwanie przecinków z Bid, Ask, Low, High
-      row['Bid'] = (spans[base+2]?.textContent.trim() || '').replace(/,/g, '');
-      row['Ask'] = (spans[base+3]?.textContent.trim() || '').replace(/,/g, '');
+      let name = metalName;
+      let slug = name.toLowerCase().replace(/\s+/g, '-');
+      let date = spans[base]?.textContent.trim() || '';
+      let time = spans[base+1]?.textContent.trim() || '';
+      let bid = (spans[base+2]?.textContent.trim() || '').replace(/,/g, '');
+      let ask = (spans[base+3]?.textContent.trim() || '').replace(/,/g, '');
       const changeDivs = container.querySelectorAll('div.BidAskGrid_changeRow__407Qp > div.BidAskGrid_change__ALV4Z > div');
       let change = changeDivs[0]?.textContent.trim() || '';
-      let changePercent = changeDivs[1]?.textContent.trim() || '';
-      // '-' zamień na '0', usuń % z ChangePercent
+      let change_percent = changeDivs[1]?.textContent.trim() || '';
       if (change === '-') change = '0';
-      if (changePercent === '-') changePercent = '0';
-      changePercent = changePercent.replace('%', '');
-      row['Change'] = change;
-      row['ChangePercent'] = changePercent;
-      row['Low'] = (spans[base+4]?.textContent.trim() || '').replace(/,/g, '');
-      row['High'] = (spans[base+5]?.textContent.trim() || '').replace(/,/g, '');
-      data.push(row);
+      if (change_percent === '-') change_percent = '0';
+      change_percent = change_percent.replace('%', '');
+      let low = (spans[base+4]?.textContent.trim() || '').replace(/,/g, '');
+      let high = (spans[base+5]?.textContent.trim() || '').replace(/,/g, '');
+      let price = bid;
+      // Budowanie obiektu z kluczami lowercase
+      const obj = {
+        name,
+        slug,
+        date,
+        time,
+        bid,
+        ask,
+        change,
+        change_percent,
+        low,
+        high,
+        price
+      };
+      data.push(obj);
     });
     return data;
   });
