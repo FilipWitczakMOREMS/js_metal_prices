@@ -1,4 +1,18 @@
+require('dotenv').config();
 const puppeteer = require('puppeteer');
+const DB = require('./db');
+
+function getLocalDatetime() {
+  const now = new Date();
+  const pad = n => n.toString().padStart(2, '0');
+  const yyyy = now.getFullYear();
+  const mm = pad(now.getMonth() + 1);
+  const dd = pad(now.getDate());
+  const hh = pad(now.getHours());
+  const mi = pad(now.getMinutes());
+  const ss = pad(now.getSeconds());
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+}
 
 (async () => {
   const browser = await puppeteer.launch({ headless: true });
@@ -37,8 +51,6 @@ const puppeteer = require('puppeteer');
       }
       let name = metalName;
       let slug = name.toLowerCase().replace(/\s+/g, '-');
-      let date = spans[base]?.textContent.trim() || '';
-      let time = spans[base+1]?.textContent.trim() || '';
       let bid = (spans[base+2]?.textContent.trim() || '').replace(/,/g, '');
       let ask = (spans[base+3]?.textContent.trim() || '').replace(/,/g, '');
       const changeDivs = container.querySelectorAll('div.BidAskGrid_changeRow__407Qp > div.BidAskGrid_change__ALV4Z > div');
@@ -54,8 +66,6 @@ const puppeteer = require('puppeteer');
       const obj = {
         name,
         slug,
-        date,
-        time,
         bid,
         ask,
         change,
@@ -69,6 +79,21 @@ const puppeteer = require('puppeteer');
     return data;
   });
 
+  const updated = getLocalDatetime();
+  // Dodaj pole updated do każdego rekordu
+  result.forEach(obj => { obj.updated = updated; });
+
   console.log(JSON.stringify(result, null, 2));
-  await browser.close();
+
+  // Zapisz do bazy danych
+  const db = new DB();
+  try {
+    await db.insertMetals(result);
+    console.log('Dane zostały zapisane do bazy.');
+  } catch (e) {
+    console.error('Błąd zapisu do bazy:', e);
+  } finally {
+    await db.close();
+    await browser.close();
+  }
 })();
