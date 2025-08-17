@@ -1,0 +1,1 @@
+Skrypt pobierający aktualne ceny metali z Kitco i wyświetlający w postaci JSON.
