@@ -1,3 +1,4 @@
+if (!process.env.DOTENV_CONFIG_SILENT) process.env.DOTENV_CONFIG_SILENT = 'true';
 require('dotenv').config();
 const puppeteer = require('puppeteer');
 const DB = require('./db');
@@ -15,7 +16,7 @@ function getLocalDatetime() {
 }
 
 (async () => {
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({ headless: "new" });
   const page = await browser.newPage();
   await page.goto('https://www.kitco.com/price/precious-metals', { waitUntil: 'networkidle2' });
 
@@ -89,9 +90,9 @@ function getLocalDatetime() {
   const db = new DB();
   try {
     await db.insertMetals(result);
-    console.log('Dane zostały zapisane do bazy.');
+    //console.log('Dane zostały zapisane do bazy.');
   } catch (e) {
-    console.error('Błąd zapisu do bazy:', e);
+    //console.error('Błąd zapisu do bazy:', e);
   } finally {
     await db.close();
     await browser.close();
